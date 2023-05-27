@@ -1,0 +1,22 @@
+FROM python:3.9.16-slim-bullseye
+RUN apt-get update &&\
+    apt-get install -y --no-install-recommends \
+      bzip2 \
+      g++ \
+      git \
+      graphviz \
+      libgl1-mesa-glx \
+      libhdf5-dev \
+      openmpi-bin \
+      wget \
+      python3-tk && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir torch==2.0.0
+RUN pip install --no-cache-dir torchvision==0.15.1
+RUN pip install --no-cache-dir opencv-python
+RUN pip install --no-cache-dir tqdm
+RUN pip install --no-cache-dir --upgrade pip
+
+RUN apt-get autoremove -y
+RUN apt-get autoclean -y

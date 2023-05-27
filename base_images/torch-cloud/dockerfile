@@ -1,0 +1,17 @@
+FROM cloud-base
+
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install -y \
+    ffmpeg \
+    libsm6 \
+    libxext6
+RUN pip install --no-cache-dir torch==2.0.0
+RUN pip install --no-cache-dir torchvision==0.15.1
+RUN pip install --no-cache-dir opencv-python
+RUN pip install --no-cache-dir fastapi
+RUN pip install --no-cache-dir uvicorn
+RUN pip install --no-cache-dir tqdm
+RUN pip install --no-cache-dir --upgrade pip
+
+RUN apt-get autoremove -y
+RUN apt-get autoclean -y

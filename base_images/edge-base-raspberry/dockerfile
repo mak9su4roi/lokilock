@@ -1,0 +1,29 @@
+FROM balenalib/raspberrypi4-64-debian
+
+# Python
+RUN install_packages \
+    python3 \
+    python3-pip
+
+# picamera
+RUN install_packages \
+    python3-picamera2 \
+    ffmpeg
+
+# torch
+RUN install_packages \ 
+    libopenblas-base \
+    libopenmpi-dev \
+    libomp5
+
+# from https://github.com/Qengineering/PyTorch-Raspberry-Pi-64-OS
+COPY wheel ./wheel/
+RUN pip install --no-cache-dir \
+    ./wheel/torch-1.12.0a0+git67ece03-cp39-cp39-linux_aarch64.whl \
+    ./wheel/torchvision-0.13.0a0+da3794e-cp39-cp39-linux_aarch64.whl
+
+# opencv
+RUN install_packages \
+    python3-opencv
+
+RUN pip install --no-cache-dir tqdm
