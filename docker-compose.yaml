@@ -1,0 +1,74 @@
+services:  
+  repository:
+      build: 
+        dockerfile: endpoints/repository/dockerfile
+      environment:
+        - PYTHONUNBUFFERED=1
+      ports:
+        - '5000:5000'
+      volumes:
+        - './s3:/s3'
+  
+  enrollment:
+    build: 
+      dockerfile: endpoints/enrollment/dockerfile
+    environment:
+      - PYTHONUNBUFFERED=1
+      - REPOSITORY_URL=http://repository:5000
+      - VERIFICATION_URL=http://verification:5000
+    ports:
+      - '5001:5000'
+    depends_on:
+      - repository
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: 
+                - gpu
+    volumes:
+     - /home/mak9su/Documents/Detector/ds:/usr/src/ds
+
+  verification:
+      build: 
+        dockerfile: endpoints/verification/dockerfile
+      environment:
+        - PYTHONUNBUFFERED=1
+        - REPOSITORY_URL=http://repository:5000
+      ports:
+        - '5002:5000'
+      depends_on:
+        - repository
+        - enrollment
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: 1
+                capabilities: 
+                  - gpu
+      volumes:
+       - /home/mak9su/Documents/Detector/ds:/usr/src/ds
+    
+  lock:
+      build: 
+        dockerfile: endpoints/lock/dockerfile.laptop
+      privileged: true
+      depends_on:
+      - verification
+      volumes:
+      - './log:/log'
+      - ${XSOCK}:${XSOCK}
+      - ${XAUTH}:${XAUTH}
+      environment:
+        - PYTHONUNBUFFERED=1
+        - DISPLAY=${DISPLAY}
+        - VERIFICATION_URL=http://verification:5000
+        - LOCK_ID=akairokku
+      deploy:
+        resources:
+          limits:
+            memory: 4G
