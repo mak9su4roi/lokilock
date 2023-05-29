@@ -42,7 +42,7 @@ tree /path/to/dataset
 
 ### Test locally
 ```bash
-pytho -m venv .venv #python3.10+
+python -m venv .venv #python3.10+
 chmod +x ./build.sh
 chmod +x ./ui.sh
 ```
