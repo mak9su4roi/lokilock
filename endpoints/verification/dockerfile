@@ -1,0 +1,14 @@
+FROM torch-cloud
+
+ARG root=endpoints/verification
+WORKDIR /usr/src/
+COPY ${root}/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY api/ ./api/
+COPY models/ ./models/
+COPY common/ ./common/
+COPY ${root}/app.py ./
+COPY ${root}/start.sh ./
+RUN chmod +x start.sh
+ENTRYPOINT [ "./start.sh" ]

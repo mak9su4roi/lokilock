@@ -1,0 +1,14 @@
+FROM torch-cloud
+    
+ARG root=endpoints/enrollment
+WORKDIR /usr/src/
+COPY ${root}/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY ${root}/app.py ./
+COPY models ./models
+COPY common ./common
+COPY api ./api
+COPY ${root}/start.sh ./
+RUN chmod +x start.sh
+ENTRYPOINT [ "./start.sh" ]

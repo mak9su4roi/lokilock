@@ -1,0 +1,17 @@
+FROM edge-base-laptop
+    
+ARG root=endpoints/lock
+WORKDIR /usr/src/
+COPY ${root}/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+ENV QT_X11_NO_MITSHM=1
+COPY ${root}/app.py ./
+COPY models ./models
+COPY common ./common
+COPY port ./port
+COPY api ./api
+COPY ${root}/start.sh ./
+RUN chmod +x start.sh
+
+ENTRYPOINT [ "./start.sh" ]
