@@ -42,7 +42,7 @@ tree /path/to/dataset
 
 ### Test locally
 ```bash
-pytho -m venv .venv
+pytho -m venv .venv #python3.10+
 chmod +x ./build.sh
 chmod +x ./ui.sh
 ```
@@ -54,7 +54,7 @@ pip install -r requirements.txt
 - Split terminals & run
     - T#1
     ```bash
-    ./ui.sh
+    source ./ui.sh
     docker compose up --build
     # wait untill all services initialzed
     ```
