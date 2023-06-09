@@ -1,12 +1,5 @@
-import pathlib
 import cv2
-from ..utils import download_weights, cv2_to_mp
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
-
-
-POINTS = pathlib.Path(__file__).parent / "points.tflite"
-POINTS_URL = "https://www.dropbox.com/s/pzzwxftf6e4hxwr/points.tflite?dl=1"
+import mediapipe as mp
 
 
 def crop(
@@ -18,22 +11,21 @@ def crop(
     return cv2.resize(image[y : y + e, x : x + e], size, cv2.IMREAD_UNCHANGED)
 
 
-def bounding_box(bb):
-    x, y, _, e = bb.origin_x, bb.origin_y, bb.height, bb.width
-    y = max(0, y - int(0.4 * e))
-    x = max(0, x - int(0.2 * e))
-    e += int(e * 0.4)
-    return x, y, e
+def bounding_box(bb, h, w, *_):
+    x, y, e = map(lambda a: getattr(bb, a), ["xmin", "ymin", "width"])
+    y = max(0, y - 0.4 * e)
+    x = max(0, x - 0.2 * e)
+    e += e * 0.4
+    return *map(int, [x*w, y*h, e*w]),
 
 
-def load(points: pathlib.Path = POINTS):
-    download_weights(POINTS, POINTS_URL)
-    base_options = python.BaseOptions(model_asset_path=points)
-    options = vision.FaceDetectorOptions(
-        base_options=base_options, min_detection_confidence=0.6
+def load():
+    model = mp.solutions.face_detection.FaceDetection(
+        model_selection=0, min_detection_confidence=0.5
     )
-    detector = vision.FaceDetector.create_from_options(options)
-    return lambda image: [
-        (bounding_box(detection.bounding_box), detection.categories[0].score)
-        for detection in detector.detect(cv2_to_mp(image)).detections
-    ]
+    def detect(image):
+        return [ 
+            (bounding_box(res.location_data.relative_bounding_box, *image.shape), res.score)
+            for res in (model.process(image).detections or [])
+        ]
+    return detect

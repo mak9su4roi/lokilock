@@ -8,6 +8,7 @@ from api.repository import LockUsers
 from api.types import LockId, UserId
 from common.types.vector import Vector
 from common.utils import async_timeit
+from common.logging.logger import logger
 
 resources = {}
 
@@ -38,6 +39,7 @@ async def retriev(lock_id: str):
 
 @app.get("/{lock_id}/")
 async def retrieve_lock_data(lock_id: str):
+    logger.info(f"retrieving user feature-verctors for {lock_id=}")
     res, time = await retriev(lock_id)
     print(f"Retrieval {time=}")
     return res
@@ -45,6 +47,7 @@ async def retrieve_lock_data(lock_id: str):
 
 @app.post("/{lock_id}/", status_code=status.HTTP_201_CREATED)
 async def store_lock_data(lock_id: LockId, req: LockUsers):
+    logger.info(f"adding user feature-verctors to {lock_id=}")
     (lock_folder := resources["s3"] / lock_id).exists() or lock_folder.mkdir()
     for user, data in req.users.items():
         (user_folder := lock_folder / user).exists() or user_folder.mkdir()
@@ -53,6 +56,7 @@ async def store_lock_data(lock_id: LockId, req: LockUsers):
 
 @app.delete("/{lock_id}/{user_id}")
 async def delete_user_data(lock_id: LockId, user_id: UserId):
+    logger.info(f"removing {user_id=} feature-verctors from {lock_id=}")
     s3 = resources["s3"]
     user_folder = s3 / lock_id / user_id
     if not user_folder.exists():
@@ -63,6 +67,7 @@ async def delete_user_data(lock_id: LockId, user_id: UserId):
 
 @app.delete("/{lock_id}/")
 async def delete_lock_data(lock_id: LockId):
+    logger.info(f"removing all feature-verctors from {lock_id=}")
     s3 = resources["s3"]
     lock_folder = s3 / lock_id
     if not lock_folder.exists():

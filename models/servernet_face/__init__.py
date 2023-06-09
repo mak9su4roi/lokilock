@@ -1,5 +1,5 @@
 import pathlib
-from typing import Callable
+from typing import Callable, Union, Optional
 
 import numpy as np
 import torch
@@ -10,6 +10,8 @@ from .. import load as _load
 from ..metrics import cosine_similarity
 from ..utils import download_weights, to_feature_vector
 from .model import ServerFace
+
+
 
 POINTS = pathlib.Path(__file__).parent / "points.pts"
 POINTS_URL = "https://www.dropbox.com/s/48r6cyshsz6oh8w/points.pts?dl=1"
@@ -42,12 +44,11 @@ def initializer(use_se=False, **kwargs):
 
 def load(
     initializer: Callable = initializer,
-    device: torch.DeviceObjType | None = None,
+    device: Optional[torch.DeviceObjType] = None,
     points: pathlib.Path = POINTS,
     **kwargs
-) -> Callable[[Vector | torch.Tensor | np.ndarray], np.ndarray]:
+) -> Callable[[Union[Vector, torch.Tensor, np.ndarray]], np.ndarray]:
     download_weights(POINTS, POINTS_URL)
-    print(1000)
     model = _load(
         model=initializer(**kwargs),
         device=device or torch.device("cuda" if torch.cuda.is_available() else "cpu"),

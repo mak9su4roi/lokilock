@@ -1,4 +1,4 @@
-from enum import IntEnum, auto
+from enum import Enum, auto
 from typing import Union
 
 from common.types.vector import Model, Vector
@@ -6,10 +6,10 @@ from common.types.vector import Model, Vector
 from .types import UserId
 
 
-class AuthError(IntEnum):
-    UNKNOWN_USER = auto()
-    UNKNOWN_LOCK = auto()
-    EMPTY_USERBASE = auto()
+class AuthError(Enum):
+    UNKNOWN_USER = "Unknown user"
+    UNKNOWN_LOCK = "Unregistered lock"
+    CONNECTION = "Connection error"
 
 
 class AuthReq(Model):
@@ -17,4 +17,4 @@ class AuthReq(Model):
 
 
 class AuthRsp(Model):
-    status: Union[UserId, AuthError]
+    status: Union[AuthError, UserId]

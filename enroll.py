@@ -15,9 +15,11 @@ from models import blazeface, edgenet_face
 def enroll_users(
     src: pathlib.Path,
 ):
+    import torch
+
     assert src.exists()
     detector = blazeface.load()
-    model = edgenet_face.load()
+    model = edgenet_face.load(device=torch.device("cpu"))
     users = {}
     for user in filter(lambda u: u.is_dir(), src.iterdir()):
         if user.name not in users:
@@ -25,10 +27,10 @@ def enroll_users(
         for file in user.iterdir():
             try:
                 img = cv2.imread(file.as_posix())
-                bbox, _ = max(detector(img), key=lambda r: r[1])
+                bbox, _ = max(detector(img), key=lambda r: r[1][0])
                 face = blazeface.crop(img, bbox)
-            except ValueError:
-                print(f"Error: {file=}")
+            except ValueError as err:
+                print(f"Error: {file=} {err=}")
             else:
                 users[user.name] += [Vector.from_tensor(model(face))]
     res = enrollment.post(f"/", data=LockUsers(users=users).json())

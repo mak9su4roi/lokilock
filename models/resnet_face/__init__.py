@@ -1,5 +1,5 @@
 import pathlib
-from typing import Callable
+from typing import Callable, Optional
 
 import torch
 
@@ -20,7 +20,7 @@ def initializer(use_se=False, **kwargs):
 
 def load(
     initializer: Callable = initializer,
-    device: torch.DeviceObjType | None = None,
+    device: Optional[torch.DeviceObjType] = None,
     **kwargs
 ):
     download_weights(POINTS, POINTS_URL)

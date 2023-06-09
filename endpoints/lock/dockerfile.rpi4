@@ -1,11 +1,10 @@
-FROM edge-base-laptop
+FROM edge-base-raspberry
     
 ARG root=endpoints/lock
 WORKDIR /usr/src/
-COPY ${root}/requirements.txt ./
+COPY ${root}/requirements.rpi4.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-ENV QT_X11_NO_MITSHM=1
 COPY ${root}/app.py ./
 COPY models ./models
 COPY common ./common
@@ -13,5 +12,6 @@ COPY lock ./lock
 COPY api ./api
 COPY ${root}/start.sh ./
 RUN chmod +x start.sh
+ENV RPI=1
 
 ENTRYPOINT [ "./start.sh" ]

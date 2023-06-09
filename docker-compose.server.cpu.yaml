@@ -1,0 +1,61 @@
+services:  
+  repository:
+      build: 
+        dockerfile: endpoints/repository/dockerfile
+      environment:
+        - PYTHONUNBUFFERED=1
+      ports:
+        - '5000:5000'
+      volumes:
+        - './s3:/s3'
+      networks:
+      - proxynet
+  
+  enrollment:
+    build: 
+      dockerfile: endpoints/enrollment/dockerfile
+    environment:
+      - PYTHONUNBUFFERED=1
+      - REPOSITORY_URL=http://repository:5000
+      - VERIFICATION_URL=http://verification:5000
+    ports:
+      - '5001:5000'
+    depends_on:
+      - repository
+    volumes:
+     - /home/mak9su/Documents/Detector/ds:/usr/src/ds
+    networks:
+     - proxynet
+
+  verification:
+      build: 
+        dockerfile: endpoints/verification/dockerfile
+      environment:
+        - PYTHONUNBUFFERED=1
+        - repository_url=http://repository:5000
+        - index_port=6379
+        - index_host=index
+      ports:
+        - '5002:5000'
+      depends_on:
+        - repository
+      volumes:
+       - /home/mak9su/Documents/Detector/ds:/usr/src/ds
+      networks:
+      - proxynet
+
+  index:
+    image: redis/redis-stack:edge
+    ports:
+      - '5003:6379'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - ./scripts/redis.sh:/init.sh
+    command: ["bash", "/init.sh"]
+    networks:
+      - proxynet
+
+networks:
+  proxynet:
+    name: custom_network
