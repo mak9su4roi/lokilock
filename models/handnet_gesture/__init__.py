@@ -1,41 +1,66 @@
-import pathlib
+from enum import IntEnum, auto
+from typing import Callable
 
+import cv2
 import mediapipe as mp
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
+import numpy as np
+from mediapipe.python.solutions.hands import HandLandmark
 
-from ..utils import cv2_to_mp, download_weights
-
-POINTS = pathlib.Path(__file__).parent / "points.task"
-POINTS_URL = "https://www.dropbox.com/s/2q8bd6mi1p2bt24/points.task?dl=1"
+Hand = dict[HandLandmark, dict]
 
 
-def bounding_box(h, w, landmarks):
-    hand = {id: (int(lm.x * w), int(lm.y * h)) for id, lm in enumerate(landmarks)}
-    x0 = min(hand.values(), key=lambda c: c[0])[0]
-    x1 = max(hand.values(), key=lambda c: c[0])[0]
-    y0 = min(hand.values(), key=lambda c: c[1])[1]
-    y1 = max(hand.values(), key=lambda c: c[1])[1]
-    return x0, y0, abs(x1 - x0), abs(y1 - y0)
+class Gesture(IntEnum):
+    SQUEEZED = auto()
+    OPEN = auto()
+    NONE = auto()
 
 
-def closest_hand(h, w, recognition):
-    hands = [
-        {
-            "bbox": bounding_box(h, w, landmarks),
-            "handedness": handedness[0].category_name,
-            "gesture": gestures[0].category_name,
+def load() -> Callable[[np.ndarray], tuple[Gesture, tuple[int, int, int, int]]]:
+    model = mp.solutions.hands.Hands(
+        model_complexity=1, min_detection_confidence=0.5, min_tracking_confidence=0.5
+    )
+
+    def to_lm(hand, h, w) -> tuple[Hand, tuple[float, float, float, float]]:
+        landmarks = hand.landmark
+        landmarks = {
+            e: (w * hand.landmark[e.value].x, h * hand.landmark[e.value].y)
+            for e in HandLandmark
         }
-        for gestures, handedness, landmarks in zip(
-            recognition.gestures, recognition.handedness, recognition.hand_landmarks
+        min_x, min_y, max_x, max_y = map(
+            int,
+            (
+                min(landmarks.values(), key=lambda x_y: x_y[0])[0],
+                min(landmarks.values(), key=lambda x_y: x_y[1])[1],
+                max(landmarks.values(), key=lambda x_y: x_y[0])[0],
+                max(landmarks.values(), key=lambda x_y: x_y[1])[1],
+            ),
         )
-    ]
-    return max(hands, key=lambda g: g["bbox"][2] * g["bbox"][3]) if hands else None
+        return landmarks, [min_x, min_y, max_x, max_y]
 
+    def detect(frame) -> Gesture:
+        h, w, _ = frame.shape
+        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        if not (res := model.process(image).multi_hand_landmarks):
+            return Gesture.NONE
+        hand, _ = to_lm(res[0], h, w)
 
-def load():
-    download_weights(POINTS, POINTS_URL)
-    base_options = python.BaseOptions(model_asset_path=POINTS)
-    options = vision.GestureRecognizerOptions(base_options=base_options)
-    recognizer = vision.GestureRecognizer.create_from_options(options)
-    return lambda image: recognizer.recognize(cv2_to_mp(image))
+        i = (
+            hand[HandLandmark.INDEX_FINGER_DIP][1]
+            - hand[HandLandmark.INDEX_FINGER_MCP][1]
+        )
+        m = (
+            hand[HandLandmark.MIDDLE_FINGER_DIP][1]
+            - hand[HandLandmark.MIDDLE_FINGER_MCP][1]
+        )
+        r = (
+            hand[HandLandmark.RING_FINGER_DIP][1]
+            - hand[HandLandmark.RING_FINGER_MCP][1]
+        )
+        p = hand[HandLandmark.PINKY_DIP][1] - hand[HandLandmark.PINKY_MCP][1]
+        if all(v > 0 for v in [m, r, p]):
+            return Gesture.SQUEEZED
+        if all(v < 0 for v in [i, m, r, p]):
+            return Gesture.OPEN
+        return Gesture.NONE
+
+    return detect
