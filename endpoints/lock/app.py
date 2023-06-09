@@ -1,34 +1,34 @@
 import threading
-from typing import Final
+from time import time
 
 from lock import solenoid
-from lock.tasks import activation, camera, detection, lui, verification
+from lock.tasks import activation, camera, detection, verification, lui
 from lock.tasks.constants import EventType
 from lock.tasks.task import Event, Router, UniDirChannel
-
-UNLOCK_INTERVAL: Final = 5
-
+from lock.settings import RASPBERRY_PI, UNLOCK_INTERVAL
 
 
 if __name__ == "__main__":
     main_bus = UniDirChannel()
     router = Router()
-    lui = lui.task()
     camera = camera.task()
     detection = detection.task()
     activation = activation.task()
     verification = verification.task()
 
-    router.subscribe(camera, lui, activation.tx)
-    router.subscribe(activation.rx, main_bus.tx, lui)
-    router.subscribe(detection.rx, main_bus.tx, lui)
-    router.subscribe(verification.rx, main_bus.tx, lui)
+    extra = ([] if RASPBERRY_PI else [lui.task()])
+    router.subscribe(camera, activation.tx, *extra)
+    router.subscribe(activation.rx, main_bus.tx, *extra)
+    router.subscribe(detection.rx, main_bus.tx, *extra)
+    router.subscribe(verification.rx, main_bus.tx, *extra)
 
     activation.tx(Event(type=EventType.ACTIVATION_REQ))
     solenoid = solenoid.API()
 
+    print(10)
     for evt in iter(main_bus.rx, None):
         if evt.type is EventType.ACTIVATION_FRAMES:
+            t = time()
             print("Detected activation gesture")
             detection.tx(Event(type=EventType.DETECTION_REQ, data=evt.data))
         if evt.type is EventType.DETECTION_RSP:
@@ -38,6 +38,7 @@ if __name__ == "__main__":
                 verification.tx(Event(type=EventType.VERIFICATION_REQ, data=evt.data))
         if evt.type is EventType.VERIFICATION_RSP:
             print(evt)
+            print(f"VERIFICATION {time()-t}")
             if isinstance(evt.data, str):
                 solenoid.open(UNLOCK_INTERVAL)
                 threading.Timer(
