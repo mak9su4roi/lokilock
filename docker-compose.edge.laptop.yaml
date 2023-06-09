@@ -1,0 +1,20 @@
+services:  
+  lock:
+      build: 
+        dockerfile: endpoints/lock/dockerfile.laptop
+      privileged: true
+      volumes:
+      - './log:/log'
+      - ${XSOCK}:${XSOCK}
+      - ${XAUTH}:${XAUTH}
+      environment:
+        - PYTHONUNBUFFERED=1
+        - DISPLAY=${DISPLAY}
+        - verification_service_url=${verification_service_url}
+        - lock_id=${lock_id}
+      networks:
+      - proxynet
+
+networks:
+  proxynet:
+    name: custom_network
