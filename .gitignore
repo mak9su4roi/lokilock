@@ -162,3 +162,5 @@ cython_debug/
 points.pts
 points.tflite
 points.task
+
+s3/*
