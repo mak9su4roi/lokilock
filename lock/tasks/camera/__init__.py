@@ -1,6 +1,6 @@
-import os
+from ... import RASPBERRY_PI
 
-if os.environ.get("RPI", None) is not None:
+if RASPBERRY_PI:
     from .raspberry import task
 else:
     from .laptop import task
