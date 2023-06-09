@@ -20,7 +20,6 @@ class Vector(Model):
     @property
     def tensor(self):
         import torch
-
         return torch.from_numpy(self.data)
 
     @classmethod

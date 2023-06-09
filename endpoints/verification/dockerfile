@@ -4,6 +4,7 @@ ARG root=endpoints/verification
 WORKDIR /usr/src/
 COPY ${root}/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir redis
 
 COPY api/ ./api/
 COPY models/ ./models/
