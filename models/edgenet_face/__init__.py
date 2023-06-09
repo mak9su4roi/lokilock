@@ -17,7 +17,7 @@ POINTS_URL = "https://www.dropbox.com/s/1p7om4rxcqlxzwa/points.pts?dl=1"
 
 def initializer(use_se=False, **kwargs):
     return torch.nn.DataParallel(
-        EdgeFace(block=IRBlock, layers=[2, 2, 2, 2], use_se=use_se, **kwargs)
+        EdgeFace(block=IRBlock, layers=[2, 2, 2, 2], use_se=use_se, **kwargs),
     )
 
 
@@ -28,11 +28,15 @@ def load(
     **kwargs
 ) -> Callable[[Union[np.ndarray, torch.Tensor, Vector]], torch.Tensor]:
     download_weights(POINTS, POINTS_URL)
+    device_ = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     model = _load(
-        model=initializer(**kwargs),
-        device=device or torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+        model= initializer(**kwargs),
+        device=device_,
         points=points,
     )
+    if device_ == torch.device("cpu"):
+        model = model.module.to(device_)
 
     def execute(image):
         if isinstance(image, np.ndarray):
