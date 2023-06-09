@@ -1,6 +1,6 @@
 from collections import deque
 from enum import IntEnum, auto
-from typing import Final, Optional
+from typing import Optional
 from time import time
 
 import numpy as np
@@ -11,6 +11,7 @@ from common.types.event import Event
 from .helpers import event_stream
 from . import task as _task
 from .constants import EventType
+from ..settings import GESTURE_RESET_INTERVAL, FRAMES_PER_GESTURE
 
 
 class States(IntEnum):
@@ -19,11 +20,9 @@ class States(IntEnum):
 
 
 class StreamGestureDetector:
-    RESET_ITERVAL: Final = 0.5
-
     def __init__(self):
-        self.__hand_opened = deque([], 5)
-        self.__hand_closed = deque([], 5)
+        self.__hand_opened = deque([], FRAMES_PER_GESTURE//2)
+        self.__hand_closed = deque([], FRAMES_PER_GESTURE//2)
         self.__timestamp = time()
         self.__detector = gnet.load()
 
@@ -35,10 +34,9 @@ class StreamGestureDetector:
         opened = self.__hand_opened
         closed = self.__hand_closed
         gesture = self.__detector(frame)
-
         if gesture is gnet.Gesture.NONE:
             return
-        if timestamp - self.__timestamp > self.RESET_ITERVAL:
+        if timestamp - self.__timestamp > GESTURE_RESET_INTERVAL:
             self.clear()
         self.__timestamp = timestamp
 
