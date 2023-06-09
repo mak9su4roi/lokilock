@@ -1,11 +1,13 @@
-services:  
+services:
   lock:
       build: 
         dockerfile: endpoints/lock/dockerfile.rpi4
       privileged: true
       volumes:
-      - './log:/log'
+      - ./log:/log
+      - /run/udev:/run/udev:ro
       environment:
         - PYTHONUNBUFFERED=1
+        - PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
         - verification_service_url=${verification_service_url}
         - lock_id=${lock_id}
