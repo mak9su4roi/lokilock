@@ -27,3 +27,4 @@ RUN install_packages \
     python3-opencv
 
 RUN pip install --no-cache-dir tqdm
+RUN install_packages python3-rpi.gpio
