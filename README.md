@@ -54,7 +54,7 @@ pip install -r requirements.txt
     - T#1
     ```bash
     ./.venv/bin/activate
-    bash lock.laptop.sh lock_name
+    bash lock.laptop.sh akairokku
     ```
     - T#2
     ```bash
@@ -62,18 +62,17 @@ pip install -r requirements.txt
     docker compose -f docker-compose.server.cpu.yaml up --build
     # wait untill all services initialzed
     ```
+    |Idle|Activation Gesture Begin|Activation Gesture End|
+    |:---:|:---:|:---:|
+    |![](./media/unenrolled-0001.png)|![](./media/unenrolled-0002.png)|![](./media/unenrolled-0003.png)
     - T#3
     ```
     ./.venv/bin/activate
-    python -m enroll http://localhost:5001 lock_name --enroll path/to/dataset
+    python -m enroll http://localhost:5001 akairokku --enroll path/to/dataset
     ```
-
-- Check it out
-    - Wait for lock to be ready
-    - ![](./media/idle.png)
-    - Lock is ready, point with index finger up for a second
-    - ![](./media/up.png)
-    - Then open palm
-    - ![](./media/open.png)
-    - Wait for lock to be ready again
-    - ![](./media/idle_again.png)
+   
+|Activation Gesture Begin|Activation Gesture End|
+|:---:|:---:|
+|![](./media/enrolled-001.png)|![](./media/enrolled-002.png)|
+|![](./media/enrolled-003.png)|![](./media/enrolled-004.png)|
+|![](./media/enrolled-005.png)|![](./media/enrolled-06.png)|
