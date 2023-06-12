@@ -44,24 +44,28 @@ tree /path/to/dataset
 ```bash
 python -m venv .venv #python3.10+
 chmod +x ./build.sh
-chmod +x ./ui.sh
 ```
 ```bash
 ./.venv/bin/activate
 pip install -r requirements.txt
 ./build.sh
 ```
-- Split terminals & run
+- Split terminal & run
     - T#1
     ```bash
-    source ./ui.sh
-    docker compose up --build
-    # wait untill all services initialzed
+    ./.venv/bin/activate
+    bash lock.laptop.sh lock_name
     ```
     - T#2
+    ```bash
+    ./.venv/bin/activate
+    docker compose -f docker-compose.server.cpu.yaml up --build
+    # wait untill all services initialzed
+    ```
+    - T#3
     ```
     ./.venv/bin/activate
-    python -m enroll http://localhost:5001 akairokku --enroll path/to/dataset
+    python -m enroll http://localhost:5001 lock_name --enroll path/to/dataset
     ```
 
 - Check it out
